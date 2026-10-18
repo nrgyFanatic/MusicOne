@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MusicOne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Slowly drifting neon light field -->
+  <div class="lights" aria-hidden="true">
+    <span class="glow glow--a"></span>
+    <span class="glow glow--b"></span>
+    <span class="glow glow--c"></span>
+    <span class="glow glow--d"></span>
+    <span class="glow glow--e"></span>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main id="app">
+    <div class="stage">
+      <!-- Time signature dropdown -->
+      <div class="timesig" id="timesig">
+        <button
+          class="timesig__button"
+          type="button"
+          id="timesigButton"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+        >
+          <span class="timesig__value" id="timesigValue"></span>
+          <svg class="timesig__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        <ul class="timesig__menu" id="timesigMenu" role="listbox" aria-label="Time signature" hidden></ul>
+      </div>
+
+      <!-- Measures are rendered by app.js -->
+      <div class="measures" id="measures"></div>
+    </div>
+  </main>
+
+  <!-- Randomizes every enabled tact at once -->
+  <button class="shuffle" id="shuffleAll" type="button" aria-label="Randomize all enabled measures">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  </button>
+
+  <script src="app.js"></script>
+</body>
+</html>

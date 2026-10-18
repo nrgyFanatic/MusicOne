@@ -1,0 +1,556 @@
+/* ==========================================================================
+   MusicOne — base theme + neon background
+   ========================================================================== */
+
+:root {
+  --bg: #07060c;
+  --bg-2: #0d0a18;
+
+  /* Accent. Change this one triplet to retheme the whole scene. */
+  --neon: 168, 85, 255;
+  --neon-2: 236, 72, 255;
+
+  --text: #ece9f6;
+  --muted: #9d94bd;
+
+  /* Animation speed multiplier: 1 = slow, 2.4 = faster. */
+  --speed: 1;
+
+  /* Global UI scale. Every control below is sized from this, so bumping it
+     resizes the whole board at once. */
+  --scale: 1.2;
+
+  /* Tact geometry, shared by the time signature control so the two line up. */
+  --tact-h: clamp(calc(4.5rem * var(--scale)), calc(14vh * var(--scale)), calc(8rem * var(--scale)));
+  --bar-overhang: calc(0.5rem * var(--scale));
+
+  /* Bar line geometry. The separator and the final double bar both read
+     from these, so the two stay proportional. */
+  --bar-thin: 2px;
+  --bar-gap: calc(0.2rem * var(--scale));
+  --bar-thick: calc(0.26rem * var(--scale));
+  --bar-total: calc(var(--bar-thin) + var(--bar-gap) + var(--bar-thick));
+  --bar-clearance: calc(0.25rem * var(--scale));
+  --bar-color: rgba(var(--neon), 0.72);
+
+  /* The gap has to be wide enough to hold the final double bar, because that
+     bar lands *between* two tacts whenever a trailing tact is switched off.
+     The responsive part lives in --gap-base so the media query below only has
+     to override that one value. */
+  --gap-base: clamp(calc(0.9rem * var(--scale)), calc(2.5vw * var(--scale)), calc(2rem * var(--scale)));
+  --min-gap: calc(var(--bar-total) + 2 * var(--bar-clearance));
+  --measures-gap: max(var(--gap-base), var(--min-gap));
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: radial-gradient(120% 90% at 50% 0%, var(--bg-2), var(--bg) 60%);
+  color: var(--text);
+  font-family: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  min-height: 100%;
+}
+
+/* ---------- drifting neon emitters ---------- */
+
+.lights {
+  position: fixed;
+  inset: -20vmax;
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(60px) saturate(140%);
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.glow--a {
+  width: 45vmax; height: 45vmax; top: 8%; left: 4%;
+  background: radial-gradient(circle, rgba(var(--neon), 0.85), transparent 68%);
+  animation: drift-a calc(72s / var(--speed)) ease-in-out infinite;
+}
+.glow--b {
+  width: 38vmax; height: 38vmax; top: 45%; right: 2%;
+  background: radial-gradient(circle, rgba(var(--neon-2), 0.7), transparent 66%);
+  animation: drift-b calc(58s / var(--speed)) ease-in-out infinite;
+}
+.glow--c {
+  width: 52vmax; height: 52vmax; bottom: -12%; left: 28%;
+  background: radial-gradient(circle, rgba(120, 60, 255, 0.6), transparent 70%);
+  animation: drift-c calc(90s / var(--speed)) ease-in-out infinite;
+}
+.glow--d {
+  width: 26vmax; height: 26vmax; top: 20%; left: 55%;
+  background: radial-gradient(circle, rgba(214, 130, 255, 0.55), transparent 64%);
+  animation: drift-d calc(46s / var(--speed)) linear infinite;
+}
+.glow--e {
+  width: 30vmax; height: 30vmax; bottom: 6%; right: 18%;
+  background: radial-gradient(circle, rgba(90, 40, 200, 0.65), transparent 68%);
+  animation: drift-e calc(64s / var(--speed)) ease-in-out infinite;
+}
+
+@keyframes drift-a {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  33%  { transform: translate3d(16vw, 10vh, 0) scale(1.18); }
+  66%  { transform: translate3d(-6vw, 22vh, 0) scale(0.92); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes drift-b {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05); }
+  40%  { transform: translate3d(-22vw, -14vh, 0) scale(0.88); }
+  75%  { transform: translate3d(-8vw, 16vh, 0) scale(1.22); }
+  100% { transform: translate3d(0, 0, 0) scale(1.05); }
+}
+@keyframes drift-c {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-26vw, -20vh, 0) scale(1.25); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes drift-d {
+  0%   { transform: rotate(0deg) translate3d(0, 0, 0); }
+  100% { transform: rotate(360deg) translate3d(13vw, 0, 0); }
+}
+@keyframes drift-e {
+  0%   { transform: translate3d(0, 0, 0) scale(0.95); }
+  45%  { transform: translate3d(-14vw, -10vh, 0) scale(1.3); }
+  100% { transform: translate3d(0, 0, 0) scale(0.95); }
+}
+
+/* ---------- texture passes ---------- */
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(110% 80% at 50% 45%, transparent 40%, rgba(3, 2, 8, 0.85) 100%);
+}
+
+/* ---------- app content sits above the background ---------- */
+
+#app {
+  position: relative;
+  z-index: 2;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  padding: clamp(1.25rem, 5vw, 4rem);
+}
+
+/* ---------- layout ---------- */
+
+.stage {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(1.25rem, 3.5vw, 3rem);
+  width: 100%;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.measures {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--measures-gap);
+  /* Room for the final double bar line to sit past the last tact. Derived
+     from the bar geometry so it can't fall out of sync. */
+  padding-right: calc(var(--measures-gap) / 2 + var(--bar-total) / 2 + 0.2rem * var(--scale));
+  min-width: 0;
+}
+
+/* ---------- time signature dropdown ---------- */
+
+.timesig { position: relative; flex: 0 0 auto; }
+
+.timesig__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.40rem * var(--scale));
+  /* Matches the tact boxes so the two sit level. */
+  height: var(--tact-h);
+  /* Slim padding — the digits need the vertical room. */
+  padding: calc(0.2rem * var(--scale)) calc(0.9rem * var(--scale));
+  border-radius: calc(0.8rem * var(--scale));
+  border: 2px solid rgba(var(--neon), 0.5);
+  background: linear-gradient(180deg, rgba(var(--neon), 0.18), rgba(var(--neon), 0.06));
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  box-shadow: 0 0 26px -8px rgba(var(--neon), 0.95),
+              inset 0 0 20px -12px rgba(var(--neon), 0.9);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+}
+.timesig__button:hover {
+  border-color: rgba(var(--neon), 0.85);
+  box-shadow: 0 0 34px -6px rgba(var(--neon), 1),
+              inset 0 0 20px -10px rgba(var(--neon), 0.9);
+}
+.timesig__button:active { transform: translateY(1px); }
+
+.timesig__caret {
+  width: calc(1rem * var(--scale));
+  height: calc(1rem * var(--scale));
+  opacity: 0.7;
+  transition: transform 0.35s ease;
+}
+.timesig.is-open .timesig__caret { transform: rotate(180deg); }
+
+/* --- the stacked fraction --- */
+
+.fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 800;
+  font-size: calc(1.05rem * var(--scale));
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.fraction__top,
+.fraction__bottom {
+  /* Wider than the glyphs need, so the two digits read as a stacked pair. */
+  min-width: 1.9em;
+  text-align: center;
+}
+.fraction__top { padding: 0 0.32em 0.22em; }
+.fraction__bottom { padding: 0.22em 0.32em 0; }
+
+/* The button's own digits are sized far larger than the ones in the menu.
+   Line height and padding are tightened so four-times-size digits still fit
+   inside a box matched to the tact height. */
+.timesig__value .fraction {
+  font-size: calc(3.36rem * var(--scale));
+  line-height: 0.84;
+}
+.timesig__value .fraction__top,
+.timesig__value .fraction__bottom { min-width: 1.1em; }
+.timesig__value .fraction__top { padding: 0 0 0.045em; }
+.timesig__value .fraction__bottom { padding: 0.045em 0 0; }
+
+/* --- menu --- */
+
+.timesig__menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 10;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(var(--neon), 0.4);
+  background: rgba(13, 9, 24, 0.92);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 30px 70px -28px rgba(var(--neon), 1);
+  animation: menu-in 0.28s ease both;
+}
+.timesig__menu[hidden] { display: none; }
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.timesig__option {
+  display: flex;
+  align-items: center;
+  gap: calc(0.7rem * var(--scale));
+  padding: calc(0.55rem * var(--scale)) calc(0.7rem * var(--scale));
+  border-radius: 0.6rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.timesig__option:hover,
+.timesig__option:focus-visible {
+  background: rgba(var(--neon), 0.18);
+  color: #fff;
+  outline: none;
+}
+.timesig__option[aria-selected="true"] { color: #fff; }
+.timesig__option-label { font-size: calc(0.85rem * var(--scale)); opacity: 0.65; }
+
+.timesig__check {
+  width: calc(0.7rem * var(--scale));
+  height: calc(0.7rem * var(--scale));
+  margin-left: auto;
+  color: rgb(var(--neon));
+  opacity: 0;
+}
+.timesig__option[aria-selected="true"] .timesig__check { opacity: 1; }
+
+/* ---------- measures ---------- */
+
+.measure {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.75rem * var(--scale));
+  min-width: 0;
+}
+
+.measure__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.35rem * var(--scale));
+  min-width: 0;
+}
+
+/* --- the clickable number --- */
+
+.num {
+  width: clamp(calc(2.75rem * var(--scale)), calc(4.5vw * var(--scale)), calc(3.5rem * var(--scale)));
+  aspect-ratio: 1;
+  /* Allowed to give a little when the row is tight, so the header never overflows. */
+  flex: 0 1 auto;
+  min-width: 2.4rem;
+  border-radius: calc(0.9rem * var(--scale));
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: clamp(calc(1.2rem * var(--scale)), calc(2.2vw * var(--scale)), calc(1.6rem * var(--scale)));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: color 0.35s ease, border-color 0.35s ease, background 0.35s ease,
+              box-shadow 0.35s ease, text-shadow 0.35s ease;
+}
+.num:hover { border-color: rgba(255, 255, 255, 0.25); color: var(--text); }
+
+.num[aria-pressed="true"] {
+  color: #fff;
+  border-color: rgba(var(--neon), 0.8);
+  background: rgba(var(--neon), 0.16);
+  text-shadow: 0 0 14px rgba(var(--neon), 0.95);
+  box-shadow: 0 0 26px -6px rgba(var(--neon), 1),
+              inset 0 0 22px -12px rgba(var(--neon), 1);
+}
+
+/* --- refresh stub --- */
+
+.refresh {
+  width: calc(2.1rem * var(--scale));
+  height: calc(2.1rem * var(--scale));
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.refresh:hover {
+  color: rgb(var(--neon));
+  border-color: rgba(var(--neon), 0.65);
+  background: rgba(var(--neon), 0.1);
+}
+.refresh:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+.refresh:disabled:hover {
+  color: var(--muted);
+  border-color: rgba(255, 255, 255, 0.09);
+  background: transparent;
+}
+.refresh svg {
+  width: calc(0.95rem * var(--scale));
+  height: calc(0.95rem * var(--scale));
+  display: block;
+}
+.refresh.is-spinning svg { animation: spin 0.6s ease; }
+
+/* ---------- randomize-all button ---------- */
+
+.shuffle {
+  position: fixed;
+  right: clamp(1rem, 4vw, 2.5rem);
+  bottom: clamp(1rem, 4vw, 2.5rem);
+  z-index: 5;
+  width: calc(4.6rem * var(--scale));
+  height: calc(4.6rem * var(--scale));
+  border-radius: calc(1.2rem * var(--scale));
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(var(--neon), 0.3), rgba(var(--neon), 0.1));
+  border: 1px solid rgba(var(--neon), 0.7);
+  box-shadow: 0 0 40px -6px rgba(var(--neon), 1),
+              inset 0 0 40px -18px rgba(var(--neon), 1);
+  cursor: pointer;
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.shuffle:hover {
+  border-color: rgba(var(--neon), 1);
+  box-shadow: 0 0 54px -4px rgba(var(--neon), 1),
+              inset 0 0 40px -14px rgba(var(--neon), 1);
+}
+.shuffle:active { transform: scale(0.95); }
+.shuffle:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+.shuffle:disabled:hover { transform: none; }
+
+.shuffle svg {
+  width: calc(2.3rem * var(--scale));
+  height: calc(2.3rem * var(--scale));
+  display: block;
+}
+.shuffle.is-spinning svg { animation: spin 0.6s ease; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* --- the measure body --- */
+
+.measure__box {
+  position: relative;
+  height: var(--tact-h);
+  border-radius: calc(1rem * var(--scale));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.02);
+  padding: clamp(calc(0.35rem * var(--scale)), calc(1.4vw * var(--scale)), calc(0.8rem * var(--scale)));
+  display: grid;
+  place-items: center;
+  transition: border-color 0.45s ease, background 0.45s ease, box-shadow 0.45s ease;
+}
+
+/* ---------- bar lines ---------- */
+
+/* Thin divider between tact sections. Only drawn when something follows it,
+   so a trailing disabled slot never gets a stray line. */
+.measure:not(:last-child) .measure__box::after {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--bar-overhang));
+  bottom: calc(-1 * var(--bar-overhang));
+  left: 100%;
+  /* Offset by half its own width so it sits centred in the gap. */
+  margin-left: calc(var(--measures-gap) / 2 - var(--bar-thin) / 2);
+  width: var(--bar-thin);
+  border-radius: 1px;
+  background: var(--bar-color);
+}
+
+/* Final bar line: a thin stroke, a gap, then a thick one. Centred in the gap
+   so it clears the neighbouring tact on both sides. */
+.measure.is-last .measure__box::after {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--bar-overhang));
+  bottom: calc(-1 * var(--bar-overhang));
+  left: 100%;
+  margin-left: calc(var(--measures-gap) / 2 - var(--bar-total) / 2);
+  width: var(--bar-total);
+  background-image: linear-gradient(
+    to right,
+    var(--bar-color) 0 var(--bar-thin),
+    transparent var(--bar-thin) calc(var(--bar-thin) + var(--bar-gap)),
+    var(--bar-color) calc(var(--bar-thin) + var(--bar-gap)) 100%
+  );
+}
+
+/* Shown in place of the art while a measure is switched off. */
+.measure__add {
+  display: grid;
+  place-items: center;
+  width: clamp(calc(2rem * var(--scale)), calc(6vw * var(--scale)), calc(3rem * var(--scale)));
+  aspect-ratio: 1;
+  color: var(--muted);
+  opacity: 0.5;
+  transition: opacity 0.35s ease, color 0.35s ease;
+}
+.measure__add svg { width: 100%; height: 100%; display: block; }
+
+/* The art is black notation on an opaque white field. Inverting turns the
+   white to black, and screen blending then drops that black out entirely,
+   leaving the notation itself glowing light over the neon. */
+.measure__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
+.measure.is-on .measure__box {
+  border-color: rgba(var(--neon), 0.6);
+  background: linear-gradient(180deg, rgba(var(--neon), 0.16), rgba(var(--neon), 0.03));
+  box-shadow: 0 0 40px -14px rgba(var(--neon), 1),
+              inset 0 0 50px -26px rgba(var(--neon), 1);
+}
+
+/* Off state is carried by the border and glow rather than a blanket opacity,
+   so the "+" placeholder stays legible. */
+.measure:not(.is-on) .measure__box {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow: none;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 60rem) {
+  :root {
+    --measures-gap: max(
+      calc(0.6rem * var(--scale)),
+      calc(var(--bar-total) + 2 * var(--bar-clearance))
+    );
+  }
+
+  .stage {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  /* The four measures stay in one row — they read as a sequence. */
+  .measure__head { gap: calc(0.3rem * var(--scale)); }
+}
+
+@media (max-width: 30rem) {
+  .measures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow { animation: none !important; opacity: 0.75; }
+  .timesig__menu { animation: none; }
+  .refresh.is-spinning svg { animation: none; }
+}
