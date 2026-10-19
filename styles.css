@@ -452,9 +452,10 @@ body {
 
 /* ---------- bar lines ---------- */
 
-/* Thin divider between tact sections. Only drawn when something follows it,
-   so a trailing disabled slot never gets a stray line. */
-.measure:not(:last-child) .measure__box::after {
+/* Thin divider between tact sections. Drawn only when something follows the
+   tact *and* the tact is not carrying the final bar, so a trailing disabled
+   slot never gets a stray line and the two rules can never both apply. */
+.measure:not(:last-child):not(.is-last) .measure__box::after {
   content: '';
   position: absolute;
   top: calc(-1 * var(--bar-overhang));
@@ -477,7 +478,11 @@ body {
   left: 100%;
   margin-left: calc(var(--measures-gap) / 2 - var(--bar-total) / 2);
   width: var(--bar-total);
-  background-image: linear-gradient(
+  /* The `background` shorthand, not `background-image`: the shorthand also
+     clears the flat colour the divider rule sets. Without that, the colour
+     shows through the transparent middle of the gradient and the bar reads
+     as a single solid thick line. */
+  background: linear-gradient(
     to right,
     var(--bar-color) 0 var(--bar-thin),
     transparent var(--bar-thin) calc(var(--bar-thin) + var(--bar-gap)),
@@ -528,10 +533,7 @@ body {
 
 @media (max-width: 60rem) {
   :root {
-    --measures-gap: max(
-      calc(0.6rem * var(--scale)),
-      calc(var(--bar-total) + 2 * var(--bar-clearance))
-    );
+    --gap-base: calc(0.6rem * var(--scale));
   }
 
   .stage {
