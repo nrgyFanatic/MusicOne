@@ -206,6 +206,40 @@
     });
   }
 
+  /* ======================================================================
+     Sequential toggling
+     ====================================================================== */
+
+  /* The tacts are switched on from the left and off from the right, so the
+     enabled ones always form a run starting at tact 1. That leaves exactly two
+     numbers able to act at any moment: the last tact that is on (switch it
+     off) and the first tact that is off after it (switch it on). */
+  function toggleTargets() {
+    const lastOn = [...state.measures].reverse().find((measure) => measure.enabled);
+
+    if (!lastOn) {
+      /* Nothing is on, so the only move is to start the run with tact 1. */
+      return { toEnable: state.measures[0] ? state.measures[0].id : null, toDisable: null };
+    }
+
+    const next = state.measures.find((measure) => measure.id === lastOn.id + 1);
+    return { toEnable: next ? next.id : null, toDisable: lastOn.id };
+  }
+
+  /* Locks every number that cannot act and flags the one that is next in line,
+     so the only available move is always the obvious one. */
+  function syncToggles() {
+    const { toEnable, toDisable } = toggleTargets();
+
+    state.measures.forEach((measure) => {
+      const cell = measureCell(measure.id);
+      const actionable = measure.id === toEnable || measure.id === toDisable;
+
+      cell.querySelector('.num').disabled = !actionable;
+      cell.classList.toggle('is-next', measure.id === toEnable);
+    });
+  }
+
   measuresEl.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-act]');
     if (!button || button.disabled) return;
@@ -215,8 +249,12 @@
     if (button.dataset.act === 'refresh') refreshMeasure(id, button);
   });
 
-  /* Clicking the number switches the measure below it on or off. */
+  /* Clicking the number switches the measure below it on or off — but only
+     when that tact is the one the sequence allows to move next. */
   function toggleMeasure(id) {
+    const { toEnable, toDisable } = toggleTargets();
+    if (id !== toEnable && id !== toDisable) return;
+
     const measure = findMeasure(id);
     measure.enabled = !measure.enabled;
 
@@ -225,6 +263,7 @@
 
     renderMeasure(measure);
     updateBarlines();
+    syncToggles();
     syncShuffle();
   }
 
@@ -380,6 +419,7 @@
     renderMeasure(measure);
   });
   updateBarlines();
+  syncToggles();
   syncShuffle();
   renderTimeSignature();
 })();

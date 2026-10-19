@@ -353,6 +353,29 @@ body {
               inset 0 0 22px -12px rgba(var(--neon), 1);
 }
 
+/* Only the next tact in the sequence can act, so every other number fades
+   back. Pointer events are cut off rather than just the hover style, so a
+   locked number never lights up as though it were clickable. */
+.num:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* The tact that is next in line to be switched on. It reads as an empty slot
+   waiting to be filled, echoing the dashed box below it. */
+.measure.is-next .num {
+  color: var(--text);
+  border-color: rgba(var(--neon), 0.7);
+  border-style: dashed;
+  background: rgba(var(--neon), 0.08);
+  box-shadow: 0 0 26px -8px rgba(var(--neon), 0.95);
+}
+.measure.is-next .num:hover {
+  border-color: rgba(var(--neon), 1);
+  background: rgba(var(--neon), 0.18);
+}
+
 /* --- refresh stub --- */
 
 .refresh {
