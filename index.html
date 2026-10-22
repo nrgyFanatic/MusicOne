@@ -7,9 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
+  <!-- Fattening filter for the notation strokes. Referenced from .measure__img;
+       feMorphology dilates the white noteheads after the image is inverted. -->
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="note-thicken" x="-10%" y="-10%" width="120%" height="120%"
+            color-interpolation-filters="sRGB">
+      <feMorphology in="SourceGraphic" operator="dilate" radius="0.45" result="fat" />
+      <feGaussianBlur in="fat" stdDeviation="0.15" />
+    </filter>
+  </svg>
+
   <!-- Slowly drifting neon light field -->
   <div class="lights" aria-hidden="true">
     <span class="glow glow--a"></span>
@@ -48,14 +58,68 @@
     </div>
   </main>
 
-  <!-- Randomizes every enabled tact at once -->
-  <button class="shuffle" id="shuffleAll" type="button" aria-label="Randomize all enabled measures">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-      <path d="M21 3v5h-5" />
-    </svg>
-  </button>
+  <!-- Bottom-right dock: tempo, then play-all and randomize-all -->
+  <div class="dock">
+    <div class="tempo">
+      <div class="tempo__emphasis">
+        <span class="tempo__label" id="emphasisLabel">Emphasis</span>
+        <button
+          class="switch"
+          id="emphasisToggle"
+          type="button"
+          role="switch"
+          aria-checked="true"
+          aria-labelledby="emphasisLabel"
+        >
+          <span class="switch__thumb" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="tempo__top">
+        <label class="tempo__label" for="tempoSlider">Tempo</label>
+        <span class="tempo__readout">
+          <output class="tempo__value" id="tempoValue" for="tempoSlider">100</output>
+          <span class="tempo__unit">BPM</span>
+        </span>
+      </div>
+
+      <div class="tempo__row">
+        <button class="tempo__step" id="tempoDown" type="button"
+                aria-label="Decrease tempo by 1 beat per minute">&minus;</button>
+        <input
+          class="tempo__slider"
+          id="tempoSlider"
+          type="range"
+          min="40"
+          max="200"
+          step="1"
+          value="100"
+          aria-label="Tempo in beats per minute"
+        />
+        <button class="tempo__step" id="tempoUp" type="button"
+                aria-label="Increase tempo by 1 beat per minute">+</button>
+      </div>
+    </div>
+
+    <div class="dock__actions">
+      <button class="play-big" id="playAll" type="button" aria-label="Play all enabled measures"
+              data-play-label="Play all enabled measures" data-stop-label="Stop playing">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3"
+             stroke-linejoin="round" aria-hidden="true">
+          <path d="M9.5 7.5v9L17 12z" />
+        </svg>
+      </button>
+
+      <!-- Randomizes every enabled tact at once -->
+      <button class="shuffle" id="shuffleAll" type="button" aria-label="Randomize all enabled measures">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
